@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -e
+
+help="
+Usage:
+  --since <rev>                exclusive since the commit
+  --until <rev=HEAD>           inclusive until the commit
+  --version <release_version>  version name to be released
+
+Example:
+  $ ./tools/generate-changelog --since v7.33.1 --until HEAD --version v7.33.2
+"
+
+since=""
+until="HEAD"
+version=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --since)
+      since=$2
+      shift
+      ;;
+    --until)
+      until=$2
+      shift
+      ;;
+    --version)
+      version=$2
+      shift
+      ;;
+    -h|--help)
+      printf "$help"
+      exit
+      ;;
+    --*)
+      echo "Illegal option $1"
+      ;;
+  esac
+  shift $(( $# > 0 ? 1 : 0 ))
+done
+
+revision=""
+if ! test -z "$since"; then
+  revision="$since..$until"
+fi
+
+release_date=`date "+%Y-%m-%d"`
+
+printf "## $release_date, Version $version\n### Notable Changes\n* **Coming soon**\n\n### Commits\n"
+git log --format="[%h] - %s (%an)" $revision | awk '{ print "* " $0 }'
