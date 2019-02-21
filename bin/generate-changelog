@@ -9,7 +9,7 @@ Usage:
   --version <release_version>  version name to be released
 
 Example:
-  $ ./tools/generate-changelog --since v7.33.1 --until HEAD --version v7.33.2
+  $ ./bin/generate-changelog --since v7.33.1 --until HEAD --version v7.33.2
 "
 
 since=""
