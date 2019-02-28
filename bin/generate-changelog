@@ -49,4 +49,4 @@ fi
 release_date=`date "+%Y-%m-%d"`
 
 printf "## $release_date, Version $version\n### Notable Changes\n* **Coming soon**\n\n### Commits\n"
-git log --format="[%h] - %s (%an)" $revision | awk '{ print "* " $0 }'
+git log --format="[%h] - %s (%aN)" $revision | gsed -E "s/(\[.+\]) - (.+)\:/\* \1 - \*\*\2\*\*\:/g"
