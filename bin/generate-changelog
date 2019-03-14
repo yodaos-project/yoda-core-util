@@ -53,7 +53,7 @@ fi
 
 revision=""
 if ! test -z "$since"; then
-  revision="$since..$until"
+  revision="^$since $until"
 fi
 
 release_date=`date "+%Y-%m-%d"`
