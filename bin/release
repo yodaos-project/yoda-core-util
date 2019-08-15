@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+help="
+yoda-core-util/bin/release [options] <ref-name>
+
+Options:
+  -g GROUPS, --groups=GROUPS
+                        Execute the command only on projects matching the
+                        specified groups
+  -m MANIFEST, --manifest=MANIFEST
+                        Sync the workspace before creating release with the
+                        specified manifest
+  --staging             Create staging reference instead of creating release
+
+Example:
+~/workspace > yoda-core-util/bin/release v8.1.0
+"
+
+set -ex
+
+manifest_name='default.xml'
+ref_name=''
+groups=''
+staging='NO'
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --staging)
+      staging='YES'
+      ;;
+    -g|--groups)
+      groups=$2
+      shift
+      ;;
+    -m|--manifest)
+      manifest_name=$2
+      shift
+      ;;
+    -h|--help)
+      printf "$help"
+      exit
+      ;;
+    --*)
+      echo "Illegal option $1"
+      ;;
+    *)
+      ref_name=$1
+      ;;
+  esac
+  shift $(( $# > 0 ? 1 : 0 ))
+done
+
+BASEDIR=`realpath $(dirname "$0")`
+
+repo init --submodules -m "$manifest_name"
+repo sync -c -j32 --optimized-fetch --force-sync
+
+if [ "$staging" = "YES"]; then
+  create_ref_script="git branch $ref_name \$REPO_LREV"
+else
+  create_ref_script="git tag $ref_name \$REPO_LREV"
+fi
+
+script_wrapper="
+$create_ref_script
+if [ \"\$?\" != '0']; then
+  >&2 echo \"Unable to create ref on \$REPO_PATH\"
+  exit 1
+fi
+git push \$REPO_REMOTE $ref_name
+if [ \"\$?\" != '0']; then
+  >&2 echo \"Unable to push ref on \$REPO_PATH\"
+  exit 1
+fi
+"
+repo forall --groups "$groups" -c "$script_wrapper"
